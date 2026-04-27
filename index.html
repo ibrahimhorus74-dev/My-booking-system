@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Booking Pro | v3.0</title>
+    <title>Global Booking System | Ibrahim Horus</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #1a5fb4; --success: #2ec27e; --danger: #ff4757; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; text-align: right; }
         .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; position: relative; }
         .lang-switch { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .lang-btn { cursor: pointer; border: 1px solid #ddd; padding: 8px 12px; border-radius: 12px; background: white; font-size: 13px; transition: 0.3s; }
-        .lang-btn:hover { border-color: var(--primary); }
-        .input-group { margin-bottom: 15px; }
-        input { width: 100%; padding: 15px; border: 2px solid #f0f0f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; }
+        .lang-btn { cursor: pointer; border: 1px solid #ddd; padding: 8px 12px; border-radius: 12px; background: white; font-size: 13px; }
+        .input-group { margin-bottom: 15px; text-align: inherit; }
+        input { width: 100%; padding: 15px; border: 2px solid #f0f0f0; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; text-align: inherit; }
         .btn-main { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 17px; font-weight: bold; cursor: pointer; }
         .btn-logout { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 10px; position: absolute; top: 10px; left: 10px; cursor: pointer; font-size: 12px; }
         .item-card { border: 1px solid #f0f0f0; padding: 15px; margin-bottom: 12px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; text-align: initial; }
-        .status-badge { padding: 10px; border-radius: 10px; color: white; border: none; font-weight: bold; min-width: 90px; }
+        .status-badge { padding: 10px; border-radius: 10px; color: white; border: none; font-weight: bold; min-width: 100px; }
         .avail { background: var(--success); cursor: pointer; }
         .busy { background: #d1d1d1; cursor: not-allowed; }
-        .policy-note { font-size: 11px; color: #777; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; text-align: right; }
+        .policy-note { font-size: 12px; color: #666; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; text-align: inherit; line-height: 1.6; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .hidden { display: none; }
@@ -29,7 +28,7 @@
 <body>
 
 <div class="container">
-    <button id="logout-btn" class="btn-logout hidden" onclick="logout()">خروج</button>
+    <button id="logout-btn" class="btn-logout hidden" onclick="location.reload()">خروج</button>
     
     <div class="header">
         <i class="fas fa-utensils" style="font-size: 40px; color: var(--primary);"></i>
@@ -50,7 +49,7 @@
     <div id="booking-section" class="hidden">
         <h3 id="list-title">المساحات المتاحة</h3>
         <div id="items-list"></div>
-        <button id="refresh-btn" class="btn-main" style="background:#6c757d" onclick="loadData()">تحديث القائمة</button>
+        <button id="refresh-btn" class="btn-main" style="background:#6c757d; margin-top:10px;" onclick="loadData()">تحديث القائمة</button>
         <div class="policy-note" id="policy-text">
             * تنبيه: في حالة التأخر ساعة يتم إلغاء الحجز تلقائياً ما لم يتم إبلاغنا، ويحتسب وقت التأخير ضمن وقت الطاولة.
         </div>
@@ -58,38 +57,26 @@
 </div>
 
 <script>
-    const api_url = "https://script.google.com/macros/s/AKfycbytaVHOnhE2YoqAfBmiNKo_fccWktEoRlc3BLS__QEFCs6LZfkiaxf9FOOxo_fl_BoVkg/exec"; 
-    const whatsapp_phone = "+201210900320"; 
+    // الرابط بتاعك
+    const api_url = "https://script.google.com/macros/s/AKfycbwblKQ065B9ZUbO--37r8-izdEmLIw1yekGIbIkFqzo_ROoBdQzlhn6TWLZhqhpgbW_LA/exec"; 
+    // رقم تليفونك أنت يا هيما
+    const whatsapp_phone = "201210900320"; 
     
-    async function book(id, price) {
-        if(confirm(dict[currentLang].confirm)) {
-            // تحديث البيانات في جوجل شيت (الخلفية)
-            fetch(api_url, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({name: user.name, contact: user.phone, item_id: id, price: price})
-            });
+    let currentLang = 'ar';
+    let user = null;
+    let rawData = []; // لحفظ البيانات وترجمتها حياً
 
-            // تحضير نص الرسالة
-            const msg = `طلب حجز جديد من الموقع:%0aالمكان: ${id}%0aالاسم: ${user.name}%0aالهاتف: ${user.phone}%0a---%0a*موافق على سياسة التأخير (ساعة واحدة).*`;
-            
-            // الرابط اللي بيفتح الواتساب عندك
-            const waUrl = `https://wa.me/${whatsapp_phone}?text=${msg}`;
-            
-            alert("تم الحجز.. جاري فتح واتساب لإرسال التأكيد للمسؤول.");
-            window.location.href = waUrl;
-        }
-    }
     const dict = {
-        ar: { title: "نظام الحجز الذكي", name: "الاسم الكامل", phone: "رقم الهاتف", login: "دخول", list: "المساحات المتاحة", refresh: "تحديث الحالة", book: "حجز الآن", busy: "مشغول", logout: "خروج", policy: "* تنبيه: في حالة التأخر ساعة يتم إلغاء الحجز تلقائياً ما لم يتم إبلاغنا، ويحتسب وقت التأخير ضمن وقت الطاولة.", confirm: "هل تؤكد الحجز مع الالتزام بسياسة التأخير؟" },
-        en: { title: "Smart Booking System", name: "Full Name", phone: "Phone Number", login: "Login", list: "Available Spaces", refresh: "Refresh", book: "Book Now", busy: "Busy", logout: "Logout", policy: "* Note: Delay of 1 hour results in cancellation unless notified. Delay counts towards table time.", confirm: "Confirm booking and agree to delay policy?" },
-        fr: { title: "Système de Réservation", name: "Nom Complet", phone: "Téléphone", login: "Connexion", list: "Espaces Disponibles", refresh: "Actualiser", book: "Réserver", busy: "Occupé", logout: "Quitter", policy: "* Note: Un retard d'une heure entraîne l'annulation. Le retard est inclus dans le temps de table.", confirm: "Confirmer la réservation وموافق على الشروط؟" }
+        ar: { title: "نظام الحجز الذكي", name: "الاسم الكامل", phone: "رقم الهاتف", login: "دخول", list: "المساحات المتاحة", refresh: "تحديث الحالة", book: "حجز الآن", busy: "مشغول", logout: "خروج", policy: "* تنبيه: في حالة التأخر ساعة يتم إلغاء الحجز تلقائياً ما لم يتم إبلاغنا، ويحتسب وقت التأخير ضمن وقت الطاولة.", confirm: "هل تؤكد الحجز؟" },
+        en: { title: "Smart Booking System", name: "Full Name", phone: "Phone Number", login: "Login", list: "Available Spaces", refresh: "Refresh", book: "Book Now", busy: "Occupied", logout: "Logout", policy: "* Note: Delay of 1 hour results in cancellation. Delay counts towards table time.", confirm: "Confirm booking?" },
+        fr: { title: "Système de Réservation", name: "Nom Complet", phone: "Téléphone", login: "Connexion", list: "Espaces Disponibles", refresh: "Actualiser", book: "Réserver", busy: "Occupé", logout: "Quitter", policy: "* Note: Un retard d'une heure entraîne l'annulation. Le retard est inclus dans le temps.", confirm: "Confirmer la réservation?" }
     };
 
     function setLang(lang) {
         currentLang = lang;
         const d = dict[lang];
         document.getElementById('html-tag').dir = (lang === 'ar' ? 'rtl' : 'ltr');
+        document.body.style.textAlign = (lang === 'ar' ? 'right' : 'left');
         document.getElementById('main-title').innerText = d.title;
         document.getElementById('c-name').placeholder = d.name;
         document.getElementById('c-phone').placeholder = d.phone;
@@ -98,6 +85,7 @@
         document.getElementById('refresh-btn').innerText = d.refresh;
         document.getElementById('policy-text').innerText = d.policy;
         document.getElementById('logout-btn').innerText = d.logout;
+        if(rawData.length > 0) renderData(); // إعادة رسم البيانات باللغة الجديدة
     }
 
     function login() {
@@ -112,43 +100,44 @@
         } else { alert("Data Required"); }
     }
 
-    function logout() { location.reload(); }
-
     async function loadData() {
         const list = document.getElementById('items-list');
         list.innerHTML = '<div class="loader"></div>';
         try {
             const res = await fetch(api_url);
-            const data = await res.json();
-            let h = '';
-            data.forEach(item => {
-                const isAvail = String(item.Status).toLowerCase().trim() === 'available' || item.Status === 'متاح';
-                h += `
-                <div class="item-card">
-                    <div><strong>${item.Name}</strong><br><small>${item.Features || ''}</small></div>
-                    <button class="status-badge ${isAvail ? 'avail' : 'busy'}" ${isAvail ? `onclick="book('${item.Name}', '${item.Price}')"` : 'disabled'}>
-                        ${isAvail ? dict[currentLang].book : dict[currentLang].busy}
-                    </button>
-                </div>`;
-            });
-            list.innerHTML = h;
+            rawData = await res.json();
+            renderData();
         } catch(e) { list.innerHTML = "Error!"; }
+    }
+
+    function renderData() {
+        const list = document.getElementById('items-list');
+        let h = '';
+        rawData.forEach(item => {
+            const isAvail = String(item.Status).toLowerCase().trim() === 'available' || item.Status === 'متاح';
+            h += `
+            <div class="item-card">
+                <div><strong>${item.Name}</strong><br><small>${item.Features || ''}</small></div>
+                <button class="status-badge ${isAvail ? 'avail' : 'busy'}" ${isAvail ? `onclick="book('${item.Name}', '${item.Price}')"` : 'disabled'}>
+                    ${isAvail ? dict[currentLang].book : dict[currentLang].busy}
+                </button>
+            </div>`;
+        });
+        list.innerHTML = h;
     }
 
     async function book(id, price) {
         if(confirm(dict[currentLang].confirm)) {
-            // تحديث جوجل شيت
             fetch(api_url, {
                 method: 'POST',
                 mode: 'no-cors',
                 body: JSON.stringify({name: user.name, contact: user.phone, item_id: id, price: price})
             });
 
-            // تحضير رسالة الواتساب مع الشروط
-            const msg = `طلب حجز جديد من الموقع:%0aالمكان: ${id}%0aالاسم: ${user.name}%0aالهاتف: ${user.phone}%0a---%0a*أقر بالتزامي بسياسة التأخير (إلغاء بعد ساعة).*`;
+            const msg = `طلب حجز جديد:%0aالمكان: ${id}%0aالاسم: ${user.name}%0aالهاتف: ${user.phone}%0a---%0a*أوافق على سياسة التأخير.*`;
             const waUrl = `https://wa.me/${whatsapp_phone}?text=${msg}`;
             
-            alert("تم تسجيل حجزك.. سيفتح الواتساب الآن لإرسال التأكيد.");
+            alert(currentLang === 'ar' ? "جاري فتح واتساب للتأكيد..." : "Opening WhatsApp...");
             window.location.href = waUrl;
         }
     }
